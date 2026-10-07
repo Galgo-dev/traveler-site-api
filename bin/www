@@ -27,6 +27,11 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
+if (!config.jwt.secret) {
+  console.error('JWT_SECRET manquant dans le .env : impossible de démarrer l\'API (voir .env.example).');
+  process.exit(1);
+}
+
 sequelize
   .authenticate()
   .then(function () {
