@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
       descriptionCourte: { type: DataTypes.STRING(500), allowNull: true },
       visaRequis: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
       decalageHoraire: {
+        // PostgreSQL renvoie les DECIMAL en chaînes : on expose un nombre.
+        get() {
+          const v = this.getDataValue('decalageHoraire');
+          return v === null || v === undefined ? v : Number(v);
+        },
         type: DataTypes.DECIMAL(4, 2),
         allowNull: false,
         defaultValue: 0,

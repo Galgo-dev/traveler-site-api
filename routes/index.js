@@ -1,9 +1,14 @@
-var express = require('express');
-var router = express.Router();
+// Routeur principal : monte tous les routeurs de ressources (l'app les place sous /api).
+const router = require('express').Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
+router.get('/sante', (req, res) => res.json({ statut: 'ok' }));
+
+router.use('/auth', require('./auth.routes'));
+router.use('/clients', require('./clients.routes'));
+router.use('/agents', require('./agents.routes'));
+router.use('/pays', require('./pays.routes'));
+router.use('/destinations', require('./destinations.routes'));
+router.use('/activites', require('./activites.routes'));
+router.use('/recherche', require('./recherche.routes'));
 
 module.exports = router;

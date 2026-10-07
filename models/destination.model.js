@@ -8,6 +8,11 @@ module.exports = (sequelize, DataTypes) =>
       description: { type: DataTypes.TEXT, allowNull: true },
       periodeIdeale: { type: DataTypes.STRING(100), allowNull: true },
       prixAPartirDe: {
+        // PostgreSQL renvoie les DECIMAL en chaînes : on expose un nombre.
+        get() {
+          const v = this.getDataValue('prixAPartirDe');
+          return v === null || v === undefined ? v : Number(v);
+        },
         type: DataTypes.DECIMAL(10, 2),
         field: 'prix_a_partir_de',
         allowNull: true,

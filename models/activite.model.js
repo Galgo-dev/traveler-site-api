@@ -12,9 +12,26 @@ module.exports = (sequelize, DataTypes) => {
       nom: { type: DataTypes.STRING(150), allowNull: false, validate: { notEmpty: true, len: [2, 150] } },
       description: { type: DataTypes.TEXT, allowNull: true },
       categorie: { type: DataTypes.ENUM(...CATEGORIES), allowNull: false },
-      duree: { type: DataTypes.DECIMAL(6, 2), allowNull: false, validate: { min: 0.01 } },
+      duree: {
+        type: DataTypes.DECIMAL(6, 2),
+        allowNull: false,
+        validate: { min: 0.01 },
+        // PostgreSQL renvoie les DECIMAL en chaînes : on expose un nombre.
+        get() {
+          const v = this.getDataValue('duree');
+          return v === null || v === undefined ? v : Number(v);
+        },
+      },
       dureeUnite: { type: DataTypes.ENUM(...UNITES_DUREE), allowNull: false, defaultValue: 'heures' },
-      prixParPersonne: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 } },
+      prixParPersonne: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        validate: { min: 0 },
+        get() {
+          const v = this.getDataValue('prixParPersonne');
+          return v === null || v === undefined ? v : Number(v);
+        },
+      },
       niveauDifficulte: { type: DataTypes.ENUM(...NIVEAUX_DIFFICULTE), allowNull: true },
       ageMinimum: { type: DataTypes.SMALLINT, allowNull: true, validate: { min: 0, max: 120 } },
       actif: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
