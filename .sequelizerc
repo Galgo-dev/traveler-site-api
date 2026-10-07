@@ -1,0 +1,9 @@
+const path = require('path');
+
+// Indique à sequelize-cli où trouver la configuration, les modèles, migrations et seeders.
+module.exports = {
+  config: path.resolve('config', 'sequelize-cli.js'),
+  'models-path': path.resolve('models'),
+  'migrations-path': path.resolve('migrations'),
+  'seeders-path': path.resolve('seeders'),
+};

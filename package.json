@@ -1,0 +1,31 @@
+{
+  "name": "old-traveler-api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "prestart": "node scripts/db-start.js",
+    "start": "node ./bin/www",
+    "db:start": "node scripts/db-start.js",
+    "db:start:seed": "node scripts/db-start.js --seed",
+    "db:stop": "docker compose stop db",
+    "db:reset": "docker compose down -v && node scripts/db-start.js --seed",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:seed": "sequelize-cli db:seed:all",
+    "db:psql": "docker exec -it old-traveler-db sh -c \"psql -U $POSTGRES_USER -d $POSTGRES_DB\""
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "dotenv": "^18.0.6",
+    "express": "~4.16.1",
+    "morgan": "~1.9.1",
+    "pg": "^8.23.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.8"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.5"
+  }
+}
