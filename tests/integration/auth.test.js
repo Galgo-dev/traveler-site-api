@@ -95,7 +95,10 @@ describe('Mot de passe oublié', () => {
     const demande = await h.api().post('/api/auth/mot-de-passe-oublie').send({ email: 'oubli@mail.be' });
     expect(demande.status).toBe(200);
     expect(envoi).toHaveBeenCalledTimes(1);
-    const token = envoi.mock.calls[0][0].texte.match(/token=([0-9a-f]{64})/)[1];
+    const mail = envoi.mock.calls[0][0];
+    expect(mail.a).toBe('oubli@mail.be');
+    const token = mail.texte.match(/token=([0-9a-f]{64})/)[1];
+    expect(mail.html).toContain(`/reinitialisation-mot-de-passe?token=${token}`);
 
     const enBase = await Client.scope('avecMotDePasse').findByPk(client.id);
     expect(enBase.resetTokenHash).not.toBe(token); // seul le hash est stocké
@@ -118,6 +121,21 @@ describe('Mot de passe oublié', () => {
     expect(res.status).toBe(200);
     expect(envoi).not.toHaveBeenCalled();
     envoi.mockRestore();
+  });
+
+  it('répond de la même façon si l\'envoi du mail échoue', async () => {
+    await h.creerClient({ email: 'smtp-ko@mail.be' });
+    const envoi = jest.spyOn(mailer, 'envoyer').mockRejectedValue(new Error('SMTP injoignable'));
+    const erreurConsole = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    const res = await h.api().post('/api/auth/mot-de-passe-oublie').send({ email: 'smtp-ko@mail.be' });
+    const inconnu = await h.api().post('/api/auth/mot-de-passe-oublie').send({ email: 'inconnu@mail.be' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(inconnu.body);
+    expect(erreurConsole).toHaveBeenCalled();
+
+    envoi.mockRestore();
+    erreurConsole.mockRestore();
   });
 });
 

@@ -70,14 +70,46 @@ async function demanderReinitialisation(email) {
   });
 
   const lien = `${config.frontUrl.replace(/\/$/, '')}/reinitialisation-mot-de-passe?token=${jeton}`;
-  await mailer.envoyer({
-    a: client.email,
-    sujet: 'Réinitialisation de votre mot de passe',
-    texte:
-      `Bonjour ${client.prenom},\n\n` +
-      `Pour choisir un nouveau mot de passe, ouvrez ce lien (valable ${minutes} minutes) :\n${lien}\n\n` +
-      'Si vous n\'êtes pas à l\'origine de cette demande, ignorez simplement ce message.',
-  });
+  try {
+    await mailer.envoyer({
+      a: client.email,
+      sujet: 'Réinitialisation de votre mot de passe',
+      texte:
+        `Bonjour ${client.prenom},\n\n` +
+        `Pour choisir un nouveau mot de passe, ouvrez ce lien (valable ${minutes} minutes) :\n${lien}\n\n` +
+        'Si vous n\'êtes pas à l\'origine de cette demande, ignorez simplement ce message.',
+      html: htmlReinitialisation(client.prenom, lien, minutes),
+    });
+  } catch (err) {
+    // La réponse HTTP reste identique (pas de fuite sur l'existence du compte) ;
+    // le client pourra refaire la demande.
+    console.error(`[mail] Échec de l'envoi du lien de réinitialisation : ${err.message}`);
+  }
+}
+
+const echapperHtml = (texte) =>
+  String(texte).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+// Gros texte et gros bouton : clientèle d'environ 58 ans en moyenne.
+function htmlReinitialisation(prenom, lien, minutes) {
+  const lienSur = echapperHtml(lien);
+  return `<!doctype html>
+<html lang="fr">
+<body style="margin:0;padding:24px;background:#f2f6fb;font-family:Arial,Helvetica,sans-serif;color:#1a2b3c;">
+  <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;padding:32px;">
+    <h1 style="font-size:26px;color:#1f4e8c;margin:0 0 24px;">Horizons Lointains</h1>
+    <p style="font-size:20px;line-height:1.5;">Bonjour ${echapperHtml(prenom)},</p>
+    <p style="font-size:20px;line-height:1.5;">Pour choisir un nouveau mot de passe, cliquez sur le bouton ci-dessous.
+      Ce lien est valable <strong>${minutes} minutes</strong>.</p>
+    <p style="text-align:center;margin:32px 0;">
+      <a href="${lienSur}" style="display:inline-block;background:#1f4e8c;color:#ffffff;font-size:22px;font-weight:bold;text-decoration:none;padding:18px 32px;border-radius:8px;">Choisir un nouveau mot de passe</a>
+    </p>
+    <p style="font-size:16px;line-height:1.5;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+      <a href="${lienSur}" style="color:#1f4e8c;word-break:break-all;">${lienSur}</a></p>
+    <p style="font-size:16px;line-height:1.5;color:#55657a;">Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message.</p>
+  </div>
+</body>
+</html>`;
 }
 
 async function reinitialiser(jeton, nouveauMotDePasse) {

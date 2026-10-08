@@ -36,7 +36,7 @@ Les routes `POST` ci-dessous sont limitées en nombre de tentatives (réponse 42
 | POST | `http://localhost:3000/api/auth/inscription` | Public | `nom`, `prenom`, `email`, `telephone`, `dateNaissance`, `motDePasse` |
 | POST | `http://localhost:3000/api/auth/connexion` | Public | `email`, `motDePasse` — connexion client |
 | POST | `http://localhost:3000/api/auth/agents/connexion` | Public | `email`, `motDePasse` — connexion du personnel |
-| POST | `http://localhost:3000/api/auth/mot-de-passe-oublie` | Public | `email` |
+| POST | `http://localhost:3000/api/auth/mot-de-passe-oublie` | Public | `email` — envoie un e-mail avec un lien `FRONT_URL/reinitialisation-mot-de-passe?token=…` (en dev : visible sur http://localhost:8025) |
 | POST | `http://localhost:3000/api/auth/reinitialisation` | Public | `token` (64 caractères hexadécimaux), `motDePasse` |
 | PATCH | `http://localhost:3000/api/auth/mot-de-passe` | Connecté | `motDePasseActuel`, `nouveauMotDePasse` |
 

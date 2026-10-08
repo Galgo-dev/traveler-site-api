@@ -32,6 +32,15 @@ const config = {
   motDePasseOublie: {
     dureeValiditeMinutes: Number(process.env.RESET_TOKEN_MINUTES) || 60,
   },
+  mail: {
+    // Sans SMTP_HOST, les e-mails sont simplement affichés dans la console du serveur.
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: process.env.SMTP_SECURE === 'true', // true pour le port 465 (TLS direct)
+    user: process.env.SMTP_USER,
+    password: process.env.SMTP_PASSWORD,
+    expediteur: process.env.MAIL_FROM || 'Horizons Lointains <no-reply@horizons-lointains.be>',
+  },
   rateLimit: {
     // Nombre max de tentatives sur les routes d'authentification par fenêtre de 15 minutes.
     authMax: Number(process.env.AUTH_RATE_LIMIT_MAX) || (estTest ? 1000 : 20),
