@@ -47,8 +47,14 @@ Mot de passe : au moins 10 caractères, une majuscule, une minuscule, un chiffre
 |---|---|---|---|
 | GET / PATCH | `/moi` | Client | Consulter / modifier son profil |
 | DELETE | `/moi` | Client | Supprimer son compte (RGPD), `{ motDePasse }` |
+| GET | `/moi/favoris` | Client | Ses favoris visibles : `{ destinations, activites }` |
+| PUT | `/moi/favoris/destinations/:id` | Client | Ajouter une destination (201 créé, 200 déjà présent) |
+| DELETE | `/moi/favoris/destinations/:id` | Client | Retirer une destination |
+| PUT | `/moi/favoris/activites/:id` | Client | Ajouter une activité (201 créé, 200 déjà présent) |
+| DELETE | `/moi/favoris/activites/:id` | Client | Retirer une activité |
 | GET | `/` | Personnel | Liste des clients (`q` : nom, prénom, e-mail, téléphone) |
 | GET | `/:id` | Personnel | Dossier d'un client |
+| GET | `/:id/favoris` | Personnel | Favoris d'un client, éléments masqués compris |
 | PATCH | `/:id` | Personnel | Corriger un client (jamais le mot de passe) |
 | DELETE | `/:id` | Personnel | Suppression RGPD sur demande du client |
 
