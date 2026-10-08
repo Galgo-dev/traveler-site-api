@@ -1,0 +1,27 @@
+# Base PostgreSQL de l'API Old Traveler.
+# Les valeurs ${DB_*} sont lues automatiquement par Docker Compose dans le fichier .env du projet.
+name: old-traveler-api
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: old-traveler-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      TZ: Europe/Brussels
+      PGTZ: Europe/Brussels
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - old-traveler-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  old-traveler-pgdata:
