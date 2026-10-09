@@ -11,6 +11,10 @@ const Favori = require('./favori.model')(sequelize, DataTypes);
 const Demande = require('./demande.model')(sequelize, DataTypes);
 const DemandeActivite = require('./demande-activite.model')(sequelize, DataTypes);
 const HistoriqueDemande = require('./historique-demande.model')(sequelize, DataTypes);
+const Avis = require('./avis.model')(sequelize, DataTypes);
+const ReponseAvis = require('./reponse-avis.model')(sequelize, DataTypes);
+const NoteActivite = require('./note-activite.model')(sequelize, DataTypes);
+const HistoriqueAvis = require('./historique-avis.model')(sequelize, DataTypes);
 
 // Pays 1 — N Destination (obligatoire, suppression du pays bloquée si non vide)
 Pays.hasMany(Destination, { foreignKey: 'paysId', as: 'destinations', onDelete: 'RESTRICT' });
@@ -73,6 +77,46 @@ HistoriqueDemande.belongsTo(Demande, { foreignKey: 'demandeId', as: 'demande' })
 HistoriqueDemande.belongsTo(Client, { foreignKey: 'auteurClientId', as: 'auteurClient', onDelete: 'SET NULL' });
 HistoriqueDemande.belongsTo(Agent, { foreignKey: 'auteurAgentId', as: 'auteurAgent', onDelete: 'SET NULL' });
 
+// V3 — Demande 1 — 0..1 Avis (R4), sur la destination de la commande (R5)
+Demande.hasOne(Avis, { foreignKey: 'demandeId', as: 'avis', onDelete: 'CASCADE' });
+Avis.belongsTo(Demande, { foreignKey: 'demandeId', as: 'demande' });
+Destination.hasMany(Avis, { foreignKey: 'destinationId', as: 'avis' });
+Avis.belongsTo(Destination, { foreignKey: 'destinationId', as: 'destination' });
+// Client 1 — N Avis (conservés et anonymisés à la suppression du compte : R19)
+Client.hasMany(Avis, { foreignKey: 'clientId', as: 'avis', onDelete: 'SET NULL' });
+Avis.belongsTo(Client, { foreignKey: 'clientId', as: 'client' });
+Avis.belongsTo(Agent, { foreignKey: 'moderateurId', as: 'moderateur', onDelete: 'SET NULL' });
+
+// Avis 1 — 0..1 Réponse de l'agence (R14), signée par le dernier agent (P7)
+Avis.hasOne(ReponseAvis, { foreignKey: 'avisId', as: 'reponse', onDelete: 'CASCADE' });
+ReponseAvis.belongsTo(Avis, { foreignKey: 'avisId', as: 'avis' });
+ReponseAvis.belongsTo(Agent, { foreignKey: 'agentId', as: 'agent', onDelete: 'SET NULL' });
+
+// Avis 1 — N Notes d'activités (R20 : activités de la commande uniquement)
+Avis.hasMany(NoteActivite, { foreignKey: 'avisId', as: 'notesActivites', onDelete: 'CASCADE' });
+NoteActivite.belongsTo(Avis, { foreignKey: 'avisId', as: 'avis' });
+NoteActivite.belongsTo(Activite, { foreignKey: 'activiteId', as: 'activite' });
+Activite.hasMany(NoteActivite, { foreignKey: 'activiteId', as: 'notes' });
+
+// Avis 1 — N HistoriqueAvis (P14) ; auteur = client ou membre du personnel
+Avis.hasMany(HistoriqueAvis, { foreignKey: 'avisId', as: 'historique', onDelete: 'CASCADE' });
+HistoriqueAvis.belongsTo(Avis, { foreignKey: 'avisId', as: 'avis' });
+HistoriqueAvis.belongsTo(Client, { foreignKey: 'auteurClientId', as: 'auteurClient', onDelete: 'SET NULL' });
+HistoriqueAvis.belongsTo(Agent, { foreignKey: 'auteurAgentId', as: 'auteurAgent', onDelete: 'SET NULL' });
+
 module.exports = {
-  sequelize, Pays, Destination, Activite, Agent, Client, Favori, Demande, DemandeActivite, HistoriqueDemande,
+  sequelize,
+  Pays,
+  Destination,
+  Activite,
+  Agent,
+  Client,
+  Favori,
+  Demande,
+  DemandeActivite,
+  HistoriqueDemande,
+  Avis,
+  ReponseAvis,
+  NoteActivite,
+  HistoriqueAvis,
 };
