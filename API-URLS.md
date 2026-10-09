@@ -145,6 +145,24 @@ Valeurs autorisées :
 
 ---
 
+## Demandes de voyage (v2) — `/api/demandes`
+
+Toutes les routes exigent d'être connecté.
+
+| Méthode | URL | Accès | Corps / query |
+|---|---|---|---|
+| POST | `http://localhost:3000/api/demandes/estimation` | Client | Même corps que la création → `{ prixDestination, prixUnitaire, prixEstime, mentionPrix, activites, avertissement? }` |
+| POST | `http://localhost:3000/api/demandes` | Client | `destinationId`, `dateDepart`, `dateRetour` (AAAA-MM-JJ), `nbAdultes`, `nbEnfants`, `activiteIds` (facultatif), `remarques` (facultatif, 1 000 caractères max.) → 201 `{ message, demande, avertissement? }` |
+| GET | `http://localhost:3000/api/demandes` | Client / Personnel | Client : ses demandes. Personnel : toutes — query : `etat`, `paysId`, `destinationId`, `clientId`, `q`, `departDu`, `departAu`, `page`, `limite` |
+| GET | `http://localhost:3000/api/demandes/:id` | Client / Personnel | Détail ; le personnel voit aussi le client et l'historique |
+| POST | `http://localhost:3000/api/demandes/:id/confirmation` | Personnel | — |
+| POST | `http://localhost:3000/api/demandes/:id/annulation` | Client / Personnel | `motif` (obligatoire pour le personnel) |
+
+- `etat` : `en_attente`, `confirmee`, `annulee`
+- Liste triée par date de commande décroissante.
+
+---
+
 ## Événements en direct — `/api/evenements`
 
 | Méthode | URL | Accès | Description |

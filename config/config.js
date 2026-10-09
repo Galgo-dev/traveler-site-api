@@ -32,6 +32,12 @@ const config = {
   motDePasseOublie: {
     dureeValiditeMinutes: Number(process.env.RESET_TOKEN_MINUTES) || 60,
   },
+  demandes: {
+    // R3 / P1 : délai minimum (en jours) entre la commande et le départ.
+    delaiMinJours: process.env.DEMANDE_DELAI_MIN_JOURS !== undefined && process.env.DEMANDE_DELAI_MIN_JOURS !== ''
+      ? Number(process.env.DEMANDE_DELAI_MIN_JOURS)
+      : 7,
+  },
   mail: {
     // Sans SMTP_HOST, les e-mails sont simplement affichés dans la console du serveur.
     host: process.env.SMTP_HOST,

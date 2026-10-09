@@ -1,6 +1,6 @@
 // Gestion des comptes clients (profil, consultation par les agents, suppression RGPD).
 const { Op } = require('sequelize');
-const { Client } = require('../models');
+const { sequelize, Client, Demande } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { comparer } = require('../utils/password');
 const pagination = require('../utils/pagination');
@@ -54,9 +54,17 @@ async function modifier(id, donnees) {
 }
 
 // Règle 10 (RGPD) : la suppression efface définitivement les données personnelles du client.
+// V2 (§8) : ses demandes de voyage sont conservées mais anonymisées ; les remarques en texte libre
+// (santé, mobilité…) sont purgées, puis la base retire le lien vers le client (client_id → NULL).
+async function effacer(client) {
+  await sequelize.transaction(async (transaction) => {
+    await Demande.update({ remarques: null }, { where: { clientId: client.id }, transaction });
+    await client.destroy({ transaction });
+  });
+}
+
 async function supprimer(id) {
-  const client = await obtenir(id);
-  await client.destroy();
+  await effacer(await obtenir(id));
 }
 
 // Les actions sensibles du client sur son propre compte sont reconfirmées par son mot de passe.
@@ -71,8 +79,7 @@ async function verifierMotDePasse(id, motDePasse) {
 
 // Suppression immédiate par le client lui-même.
 async function supprimerSonCompte(id, motDePasse) {
-  const client = await verifierMotDePasse(id, motDePasse);
-  await client.destroy();
+  await effacer(await verifierMotDePasse(id, motDePasse));
 }
 
 // Le client demande la suppression ; un agent l'effacera depuis le back-office.

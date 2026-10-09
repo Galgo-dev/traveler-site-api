@@ -94,3 +94,17 @@ Filtres : `q` (mot-clé, insensible aux accents), `continent` (pays), `paysId`, 
 
 ### Recherche — `GET /api/recherche` (public)
 `q`, `categorie`, `budgetMax` → `{ pays, destinations, activites }` (éléments visibles uniquement).
+
+### Demandes de voyage (v2) — `/api/demandes`
+| Méthode | Route | Accès | Description |
+|---|---|---|---|
+| POST | `/estimation` | Client | Prix estimé et avertissement de doublon, sans rien enregistrer |
+| POST | `/` | Client | Passer une demande (`destinationId`, `dateDepart`, `dateRetour`, `nbAdultes`, `nbEnfants`, `activiteIds`, `remarques`) |
+| GET | `/` | Client / Personnel | Client : ses demandes. Personnel : toutes, filtres `etat`, `paysId`, `destinationId`, `clientId`, `q` (client), `departDu`, `departAu` |
+| GET | `/:id` | Client / Personnel | Détail (personnel : coordonnées du client et historique) |
+| POST | `/:id/confirmation` | Personnel | En attente → Confirmée |
+| POST | `/:id/annulation` | Client / Personnel | Client : si en attente. Personnel : `motif` obligatoire |
+
+- **Prix estimé** = (prix indicatif destination + Σ prix des activités) × (adultes + 0,5 × enfants), figé à la commande, toujours accompagné de « Estimation, non contractuel ». Sans prix indicatif pour la destination, aucune estimation n'est calculée (`prixEstime: null`).
+- **Règles** : départ au moins `DEMANDE_DELAI_MIN_JOURS` jours après la commande (7 par défaut), retour après le départ, 1 à 10 voyageurs dont au moins 1 adulte, destination active et activités actives du même pays. Une demande ne se modifie pas : on l'annule puis on en crée une nouvelle.
+- **RGPD** : à la suppression d'un compte, ses demandes sont conservées mais anonymisées, et leurs remarques sont effacées.
