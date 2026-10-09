@@ -145,6 +145,25 @@ Valeurs autorisées :
 
 ---
 
+## Événements en direct — `/api/evenements`
+
+| Méthode | URL | Accès | Description |
+|---|---|---|---|
+| GET | `http://localhost:3000/api/evenements/catalogue` | Public | Flux Server-Sent Events (`text/event-stream`) : prévient les pages ouvertes de chaque modification du catalogue |
+
+Après chaque création, modification, masquage / réactivation ou suppression **réussie** d'un pays, d'une
+destination ou d'une activité, l'API envoie :
+
+```
+event: catalogue
+data: {"ressource":"destinations"}
+```
+
+`ressource` vaut `pays`, `destinations` ou `activites`. Côté navigateur :
+`new EventSource(url).addEventListener('catalogue', …)` — la reconnexion après une coupure est automatique.
+
+---
+
 ## Exemples d'appels
 
 ```

@@ -2,11 +2,15 @@ const router = require('express').Router();
 const validate = require('../middlewares/validate.middleware');
 const { authentifier, authentifierSiPresent } = require('../middlewares/auth.middleware');
 const { autoriser, PERSONNEL } = require('../middlewares/role.middleware');
+const { notifierCatalogue } = require('../middlewares/catalogue.middleware');
 const { paramsId, statut } = require('../validators/commun.validator');
 const v = require('../validators/activites.validator');
 const controller = require('../controllers/activites.controller');
 
 const personnel = [authentifier, autoriser(...PERSONNEL)];
+
+// Chaque modification réussie est signalée en direct aux pages ouvertes.
+router.use(notifierCatalogue('activites'));
 
 // Consultation publique (point à confirmer n°1 : catalogue accessible sans connexion).
 router.get('/', authentifierSiPresent, validate(v.liste, 'query'), controller.lister);
