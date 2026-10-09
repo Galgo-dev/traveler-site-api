@@ -13,6 +13,14 @@ router.use(authentifier);
 router.get('/moi', autoriser(ROLES.CLIENT), controller.monProfil);
 router.patch('/moi', autoriser(ROLES.CLIENT), validate(v.modification), controller.modifierMonProfil);
 router.delete('/moi', autoriser(ROLES.CLIENT), validate(v.suppressionCompte), controller.supprimerMonCompte);
+// Règle 10 : le client demande la suppression, un agent la traite (liste : GET /clients?suppressionDemandee=true).
+router.post(
+  '/moi/demande-suppression',
+  autoriser(ROLES.CLIENT),
+  validate(v.demandeSuppression),
+  controller.demanderSuppression
+);
+router.delete('/moi/demande-suppression', autoriser(ROLES.CLIENT), controller.annulerDemandeSuppression);
 
 // --- Favoris du client connecté (:id = id de la destination ou de l'activité) ---
 const client = [autoriser(ROLES.CLIENT)];

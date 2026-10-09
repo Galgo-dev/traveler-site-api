@@ -1,17 +1,30 @@
 // Gestion des comptes clients (profil, consultation par les agents, suppression RGPD).
+const { Op } = require('sequelize');
 const { Client } = require('../models');
 const ApiError = require('../utils/ApiError');
 const { comparer } = require('../utils/password');
 const pagination = require('../utils/pagination');
-const { contient } = require('./recherche.utils');
+const { contient, et } = require('./recherche.utils');
 
 // Seuls ces champs sont modifiables. Le mot de passe n'en fait jamais partie (règle 4).
 const CHAMPS_MODIFIABLES = ['nom', 'prenom', 'email', 'telephone', 'dateNaissance'];
 
-async function lister({ q, page, limite }) {
+const ORDRE_ALPHABETIQUE = [['nom', 'ASC'], ['prenom', 'ASC'], ['id', 'ASC']];
+// Les demandes de suppression se traitent de la plus ancienne à la plus récente.
+const ORDRE_DEMANDES = [['suppressionDemandeeLe', 'ASC'], ['id', 'ASC']];
+
+function filtreDemandeSuppression(suppressionDemandee) {
+  if (suppressionDemandee === undefined) return null;
+  return { suppressionDemandeeLe: suppressionDemandee ? { [Op.ne]: null } : null };
+}
+
+async function lister({ q, page, limite, suppressionDemandee }) {
   const resultat = await Client.findAndCountAll({
-    where: contient(['Client.nom', 'Client.prenom', 'Client.email', 'Client.telephone'], q) || {},
-    order: [['nom', 'ASC'], ['prenom', 'ASC'], ['id', 'ASC']],
+    where: et(
+      contient(['Client.nom', 'Client.prenom', 'Client.email', 'Client.telephone'], q),
+      filtreDemandeSuppression(suppressionDemandee)
+    ),
+    order: suppressionDemandee ? ORDRE_DEMANDES : ORDRE_ALPHABETIQUE,
     ...pagination.versOptions({ page, limite }),
   });
   return pagination.formater(resultat, { page, limite });
@@ -46,14 +59,44 @@ async function supprimer(id) {
   await client.destroy();
 }
 
-// Suppression demandée par le client lui-même : on reconfirme son mot de passe.
-async function supprimerSonCompte(id, motDePasse) {
+// Les actions sensibles du client sur son propre compte sont reconfirmées par son mot de passe.
+async function verifierMotDePasse(id, motDePasse) {
   const client = await Client.scope('avecMotDePasse').findByPk(id);
   if (!client) throw ApiError.introuvable('Client introuvable.');
   if (!(await comparer(motDePasse, client.motDePasse))) {
     throw ApiError.requeteInvalide('Mot de passe incorrect.');
   }
+  return client;
+}
+
+// Suppression immédiate par le client lui-même.
+async function supprimerSonCompte(id, motDePasse) {
+  const client = await verifierMotDePasse(id, motDePasse);
   await client.destroy();
 }
 
-module.exports = { lister, obtenir, modifier, supprimer, supprimerSonCompte };
+// Le client demande la suppression ; un agent l'effacera depuis le back-office.
+// Renouveler la demande ne change pas la date de la première, toujours en attente.
+async function demanderSuppression(id, motDePasse) {
+  const client = await verifierMotDePasse(id, motDePasse);
+  if (!client.suppressionDemandeeLe) {
+    await client.update({ suppressionDemandeeLe: new Date() });
+  }
+  return obtenir(id);
+}
+
+async function annulerDemandeSuppression(id) {
+  const client = await obtenir(id);
+  await client.update({ suppressionDemandeeLe: null });
+  return obtenir(id);
+}
+
+module.exports = {
+  lister,
+  obtenir,
+  modifier,
+  supprimer,
+  supprimerSonCompte,
+  demanderSuppression,
+  annulerDemandeSuppression,
+};

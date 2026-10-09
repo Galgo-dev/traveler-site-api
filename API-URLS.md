@@ -51,7 +51,9 @@ Mot de passe : au moins 10 caractères, une majuscule, une minuscule et un chiff
 | GET | `http://localhost:3000/api/clients/moi` | Client | Voir son profil |
 | PATCH | `http://localhost:3000/api/clients/moi` | Client | Modifier son profil (`nom`, `prenom`, `email`, `telephone`, `dateNaissance`) |
 | DELETE | `http://localhost:3000/api/clients/moi` | Client | Supprimer son compte (RGPD) — corps : `motDePasse` |
-| GET | `http://localhost:3000/api/clients` | Personnel | Liste des clients — query : `page`, `limite`, `q` |
+| POST | `http://localhost:3000/api/clients/moi/demande-suppression` | Client | Demander la suppression de son compte, traitée par un agent — corps : `motDePasse` (400 si incorrect). Réponse : le profil avec `suppressionDemandeeLe` |
+| DELETE | `http://localhost:3000/api/clients/moi/demande-suppression` | Client | Annuler sa demande de suppression. Réponse : le profil |
+| GET | `http://localhost:3000/api/clients` | Personnel | Liste des clients — query : `page`, `limite`, `q`, `suppressionDemandee` (`true` : demandes de suppression en attente, les plus anciennes d'abord) |
 | GET | `http://localhost:3000/api/clients/:id` | Personnel | Dossier d'un client |
 | GET | `http://localhost:3000/api/clients/:id/favoris` | Personnel | Favoris d'un client, éléments masqués compris |
 | PATCH | `http://localhost:3000/api/clients/:id` | Personnel | Corriger un client (jamais le mot de passe) |

@@ -18,6 +18,8 @@ module.exports = (sequelize, DataTypes) =>
       motDePasse: { type: DataTypes.STRING(255), allowNull: false },
       resetTokenHash: { type: DataTypes.STRING(255), allowNull: true },
       resetTokenExpireLe: { type: DataTypes.DATE, allowNull: true },
+      // Date à laquelle le client a demandé la suppression de son compte (null : aucune demande en attente).
+      suppressionDemandeeLe: { type: DataTypes.DATE, allowNull: true },
     },
     {
       tableName: 'clients',

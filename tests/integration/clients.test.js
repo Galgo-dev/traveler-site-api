@@ -95,3 +95,61 @@ describe('Le personnel et les dossiers clients', () => {
     expect((await h.api().get('/api/clients')).status).toBe(401);
   });
 });
+
+describe('Demande de suppression de compte (règle 10)', () => {
+  const demander = (token, motDePasse) =>
+    h.api().post('/api/clients/moi/demande-suppression').set(auth(token)).send({ motDePasse });
+
+  it('est confirmée par le mot de passe, enregistre la date et garde la première demande', async () => {
+    const client = await h.creerClient();
+    const token = await h.connecterClient(client);
+
+    const refus = await demander(token, 'Mauvais-2026x');
+    expect(refus.status).toBe(400);
+    expect((await Client.findByPk(client.id)).suppressionDemandeeLe).toBeNull();
+
+    const demande = await demander(token, h.MDP);
+    expect(demande.status).toBe(200);
+    expect(demande.body.suppressionDemandeeLe).toEqual(expect.any(String));
+    expect(demande.body.motDePasse).toBeUndefined();
+
+    // Renouveler la demande ne repousse pas la date de la première.
+    const nouvelle = await demander(token, h.MDP);
+    expect(nouvelle.body.suppressionDemandeeLe).toBe(demande.body.suppressionDemandeeLe);
+  });
+
+  it('peut être annulée par le client', async () => {
+    const client = await h.creerClient();
+    const token = await h.connecterClient(client);
+    await demander(token, h.MDP);
+
+    const res = await h.api().delete('/api/clients/moi/demande-suppression').set(auth(token));
+    expect(res.status).toBe(200);
+    expect(res.body.suppressionDemandeeLe).toBeNull();
+  });
+
+  it('apparaît dans la liste du personnel, qui efface ensuite le compte', async () => {
+    const demandeur = await h.creerClient({ email: 'demandeur@mail.be' });
+    await h.creerClient({ email: 'sans-demande@mail.be' });
+    await demander(await h.connecterClient(demandeur), h.MDP);
+    const token = await h.connecterAgent(await h.creerAgent());
+
+    const liste = await h.api().get('/api/clients?suppressionDemandee=true').set(auth(token));
+    expect(liste.status).toBe(200);
+    expect(liste.body.donnees.map((c) => c.email)).toEqual(['demandeur@mail.be']);
+
+    expect((await h.api().delete(`/api/clients/${demandeur.id}`).set(auth(token))).status).toBe(204);
+    const apres = await h.api().get('/api/clients?suppressionDemandee=true').set(auth(token));
+    expect(apres.body.pagination.total).toBe(0);
+  });
+
+  it('règle 5 : un client ne voit pas la liste des demandes (403)', async () => {
+    const token = await h.connecterClient(await h.creerClient());
+    expect((await h.api().get('/api/clients?suppressionDemandee=true').set(auth(token))).status).toBe(403);
+  });
+
+  it('est réservée au client : le personnel ne peut pas faire de demande pour lui-même (403)', async () => {
+    const token = await h.connecterAgent(await h.creerAgent());
+    expect((await demander(token, h.MDP)).status).toBe(403);
+  });
+});
