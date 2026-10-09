@@ -11,6 +11,7 @@ router.use('/destinations', require('./destinations.routes'));
 router.use('/activites', require('./activites.routes'));
 router.use('/recherche', require('./recherche.routes'));
 router.use('/demandes', require('./demandes.routes'));
+router.use('/avis', require('./avis.routes'));
 router.use('/evenements', require('./evenements.routes'));
 
 module.exports = router;

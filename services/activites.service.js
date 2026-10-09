@@ -5,6 +5,7 @@ const { Pays, Destination, Activite } = require('../models');
 const ApiError = require('../utils/ApiError');
 const pagination = require('../utils/pagination');
 const { contient, et } = require('./recherche.utils');
+const { ajouterResume, moyennesActivites } = require('./avis.utils');
 
 const inclusions = (voirMasques) => [
   {
@@ -38,14 +39,23 @@ async function lister({ q, paysId, destinationId, categorie, budgetMax, page, li
     subQuery: false,
     ...pagination.versOptions({ page, limite }),
   });
-  return pagination.formater(resultat, { page, limite });
+  const reponse = pagination.formater(resultat, { page, limite });
+  // V3 (P11) : moyenne des notes laissées dans les avis publiés.
+  reponse.donnees = await ajouterResume(reponse.donnees, moyennesActivites);
+  return reponse;
 }
 
-async function obtenir(id, voirMasques = false) {
+async function trouver(id, voirMasques = false) {
   const activite = await Activite.findByPk(id, { include: inclusions(true) });
   const visible =
     activite && activite.actif && activite.pays.actif && (!activite.destination || activite.destination.actif);
   if (!activite || (!voirMasques && !visible)) throw ApiError.introuvable('Activité introuvable.');
+  return activite;
+}
+
+// Détail avec la moyenne des notes (P11).
+async function obtenir(id, voirMasques = false) {
+  const [activite] = await ajouterResume([await trouver(id, voirMasques)], moyennesActivites);
   return activite;
 }
 
@@ -70,7 +80,7 @@ async function creer(donnees) {
 }
 
 async function modifier(id, donnees) {
-  const activite = await obtenir(id, true);
+  const activite = await trouver(id, true);
   const paysId = donnees.paysId ?? activite.paysId;
   // Si le pays change sans nouvelle destination, l'ancienne destination n'est plus valable.
   let destinationId = donnees.destinationId !== undefined ? donnees.destinationId : activite.destinationId;
@@ -84,13 +94,13 @@ async function modifier(id, donnees) {
 }
 
 async function changerStatut(id, actif) {
-  const activite = await obtenir(id, true);
+  const activite = await trouver(id, true);
   await activite.update({ actif });
   return obtenir(id, true);
 }
 
 async function supprimer(id) {
-  const activite = await obtenir(id, true);
+  const activite = await trouver(id, true);
   await activite.destroy();
 }
 

@@ -108,3 +108,28 @@ Filtres : `q` (mot-clé, insensible aux accents), `continent` (pays), `paysId`, 
 - **Prix estimé** = (prix indicatif destination + Σ prix des activités) × (adultes + 0,5 × enfants), figé à la commande, toujours accompagné de « Estimation, non contractuel ». Sans prix indicatif pour la destination, aucune estimation n'est calculée (`prixEstime: null`).
 - **Règles** : départ au moins `DEMANDE_DELAI_MIN_JOURS` jours après la commande (7 par défaut), retour après le départ, 1 à 10 voyageurs dont au moins 1 adulte, destination active et activités actives du même pays. Une demande ne se modifie pas : on l'annule puis on en crée une nouvelle.
 - **RGPD** : à la suppression d'un compte, ses demandes sont conservées mais anonymisées, et leurs remarques sont effacées.
+- **Voyage terminé** : chaque demande expose `voyageTermine` (confirmée et date de retour dépassée).
+
+### Avis clients (v3) — `/api/avis`
+| Méthode | Route | Accès | Description |
+|---|---|---|---|
+| GET | `/api/destinations/:id/avis` | Public | Avis publiés + `resume` (note moyenne, nombre). Query : `tri` (`recents`, `meilleures`), `note`, `page`, `limite` |
+| GET | `/derniers` | Public | 5 derniers avis publiés à 5★ (page d'accueil) |
+| GET | `/commandes-eligibles` | Client | Voyages terminés sans avis |
+| GET | `/moi` | Client | Ses avis : état, motif de refus, `modifiable`, `modifiableJusquau` |
+| POST | `/` | Client | `demandeId`, `note` (1-5), `titre` (≤ 100), `commentaire` (≤ 1 000, obligatoire si note ≤ 2), `anonyme`, `notesActivites` |
+| PATCH | `/:id` | Client | Modifier pendant 30 jours ; un contenu modifié repasse en modération |
+| DELETE | `/:id` | Client | Supprimer pendant 30 jours |
+| GET | `/:id` | Client (le sien) / Personnel | Détail ; le personnel voit le vrai client, la commande et l'historique |
+| GET | `/compteur` | Personnel | `{ aModerer }` |
+| GET | `/moderation` | Personnel | Avis en attente, plus anciens d'abord |
+| GET | `/` | Personnel | Tous les avis (négatifs d'abord). Filtres : `etat`, `destinationId`, `paysId`, `note`, `du`, `au` |
+| POST | `/:id/validation` | Personnel | En attente → publié |
+| POST | `/:id/refus` | Personnel | En attente → refusé (`motif` obligatoire) |
+| POST | `/:id/masquage` | Personnel | Publié → refusé (`motif` obligatoire) |
+| PUT | `/:id/reponse` | Personnel | Réponse de l'agence (`texte`), uniquement sur un avis publié |
+
+- Les destinations et activités (liste et fiche) exposent un champ `avis` : `{ noteMoyenne, noteMoyenneAffichee: "4,6", nombreAvis, libelle: "★ 4,6 (23 avis)" }` ou `libelle: "Pas encore d'avis"`. Seuls les avis publiés comptent.
+- Auteur public : « Julie D. », ou « Voyageur anonyme » si l'avis est anonyme ou si le compte a été supprimé.
+- Les avis d'une destination masquée sont invisibles et réapparaissent à sa réactivation.
+- Délais réglables : `AVIS_DELAI_MODIFICATION_JOURS` (30 par défaut), `AVIS_DELAI_MAX_JOURS` (délai pour rédiger après le retour, illimité par défaut).

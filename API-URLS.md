@@ -160,6 +160,32 @@ Toutes les routes exigent d'être connecté.
 
 - `etat` : `en_attente`, `confirmee`, `annulee`
 - Liste triée par date de commande décroissante.
+- Chaque demande expose `voyageTermine` (confirmée et date de retour dépassée).
+
+---
+
+## Avis clients (v3) — `/api/avis`
+
+| Méthode | URL | Accès | Corps / query |
+|---|---|---|---|
+| GET | `http://localhost:3000/api/destinations/:id/avis` | Public | query : `tri` (`recents`, `meilleures`), `note`, `page`, `limite` → `{ resume, donnees, pagination }` |
+| GET | `http://localhost:3000/api/avis/derniers` | Public | 5 derniers avis publiés à 5★ |
+| GET | `http://localhost:3000/api/avis/commandes-eligibles` | Client | — |
+| GET | `http://localhost:3000/api/avis/moi` | Client | — |
+| POST | `http://localhost:3000/api/avis` | Client | `demandeId`, `note`, `titre`, `commentaire`, `anonyme`, `notesActivites` (`[{ activiteId, note }]`) |
+| PATCH | `http://localhost:3000/api/avis/:id` | Client | Mêmes champs, tous facultatifs (30 jours après la création) |
+| DELETE | `http://localhost:3000/api/avis/:id` | Client | — (30 jours après la création) |
+| GET | `http://localhost:3000/api/avis/:id` | Client (le sien) / Personnel | — |
+| GET | `http://localhost:3000/api/avis/compteur` | Personnel | → `{ aModerer }` |
+| GET | `http://localhost:3000/api/avis/moderation` | Personnel | query : `page`, `limite` |
+| GET | `http://localhost:3000/api/avis` | Personnel | query : `etat`, `destinationId`, `paysId`, `note`, `du`, `au`, `page`, `limite` |
+| POST | `http://localhost:3000/api/avis/:id/validation` | Personnel | — |
+| POST | `http://localhost:3000/api/avis/:id/refus` | Personnel | `motif` (obligatoire) |
+| POST | `http://localhost:3000/api/avis/:id/masquage` | Personnel | `motif` (obligatoire) |
+| PUT | `http://localhost:3000/api/avis/:id/reponse` | Personnel | `texte` (≤ 1 000 caractères) |
+
+- `etat` d'un avis : `en_attente`, `publie`, `refuse`
+- Destinations et activités : champ `avis` avec `noteMoyenne`, `noteMoyenneAffichee`, `nombreAvis` et `libelle`.
 
 ---
 

@@ -4,6 +4,7 @@ const { Pays, Destination, Activite } = require('../models');
 const ApiError = require('../utils/ApiError');
 const pagination = require('../utils/pagination');
 const { contient, et } = require('./recherche.utils');
+const { ajouterResume, resumeNotes } = require('./avis.utils');
 
 const ATTRIBUTS_PAYS = ['id', 'nom', 'continent', 'actif'];
 
@@ -30,7 +31,10 @@ async function lister({ q, paysId, budgetMax, page, limite }, voirMasques = fals
     distinct: true,
     ...pagination.versOptions({ page, limite }),
   });
-  return pagination.formater(resultat, { page, limite });
+  const reponse = pagination.formater(resultat, { page, limite });
+  // V3 : « ★ 4,6 (23 avis) » ou « Pas encore d'avis » (R15, R16).
+  reponse.donnees = await ajouterResume(reponse.donnees, resumeNotes);
+  return reponse;
 }
 
 async function trouver(id, voirMasques = false) {
@@ -48,7 +52,8 @@ async function obtenir(id, voirMasques = false) {
     where: et({ destinationId: destination.id }, voirMasques ? null : { actif: true }),
     order: [['nom', 'ASC']],
   });
-  return { ...destination.get({ plain: true }), activites };
+  const resumes = await resumeNotes([destination.id]);
+  return { ...destination.get({ plain: true }), activites, avis: resumes.get(destination.id) };
 }
 
 // Règle 7 : une destination ne peut pas exister sans pays.

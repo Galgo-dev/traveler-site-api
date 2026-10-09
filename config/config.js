@@ -38,6 +38,12 @@ const config = {
       ? Number(process.env.DEMANDE_DELAI_MIN_JOURS)
       : 7,
   },
+  avis: {
+    // R9 / P1 : le client modifie ou supprime son avis pendant ce nombre de jours après sa création.
+    delaiModificationJours: Number(process.env.AVIS_DELAI_MODIFICATION_JOURS) || 30,
+    // P2 (à trancher) : délai maximal pour rédiger un avis après le retour ; vide = illimité.
+    delaiMaxRedactionJours: Number(process.env.AVIS_DELAI_MAX_JOURS) || null,
+  },
   mail: {
     // Sans SMTP_HOST, les e-mails sont simplement affichés dans la console du serveur.
     host: process.env.SMTP_HOST,

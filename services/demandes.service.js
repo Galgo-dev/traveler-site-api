@@ -6,6 +6,7 @@ const {
 const ApiError = require('../utils/ApiError');
 const pagination = require('../utils/pagination');
 const config = require('../config/config');
+const { aujourdhui, ajouterJours } = require('../utils/dates');
 const { contient, et } = require('./recherche.utils');
 
 const MENTION_PRIX = 'Estimation, non contractuel';
@@ -15,15 +16,6 @@ const AVERTISSEMENT_DOUBLON =
   'Vous avez déjà une demande en attente pour cette destination aux mêmes dates.';
 
 // --- Dates : on raisonne en jours calendaires belges (AAAA-MM-JJ) ---
-
-const aujourdhui = () =>
-  new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(new Date());
-
-function ajouterJours(jour, n) {
-  const d = new Date(`${jour}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-}
 
 // R1, R2, R3
 function verifierDates(dateDepart, dateRetour) {
@@ -204,6 +196,8 @@ function presenter(demande, utilisateur) {
     }));
   }
   brut.mentionPrix = MENTION_PRIX;
+  // V3 (§10) : voyage terminé = commande confirmée dont la date de retour est dépassée.
+  brut.voyageTermine = brut.etat === 'confirmee' && brut.dateRetour < aujourdhui();
   return estPersonnel(utilisateur) ? brut : vuePourClient(brut);
 }
 
