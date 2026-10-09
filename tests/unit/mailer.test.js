@@ -35,6 +35,9 @@ describe('mailer.envoyer', () => {
       port: 587,
       secure: false,
       auth: { user: 'no-reply@exemple.be', pass: 'secret' },
+      connectionTimeout: expect.any(Number),
+      greetingTimeout: expect.any(Number),
+      socketTimeout: expect.any(Number),
     });
     expect(sendMail).toHaveBeenCalledWith({
       from: 'Agence <no-reply@exemple.be>',
@@ -55,6 +58,16 @@ describe('mailer.envoyer', () => {
 
     expect(createTransport).toHaveBeenCalledTimes(1);
     expect(createTransport.mock.calls[0][0]).not.toHaveProperty('auth');
+  });
+
+  it('limite les délais SMTP pour répondre avant le délai de 10 s du front', async () => {
+    const { mailer, createTransport } = chargerMailer(configDeBase);
+    await mailer.envoyer(message);
+
+    const { connectionTimeout, greetingTimeout, socketTimeout } = createTransport.mock.calls[0][0];
+    // La connexion puis l'accueil SMTP doivent tenir ensemble sous les 10 s.
+    expect(connectionTimeout + greetingTimeout).toBeLessThan(10000);
+    expect(socketTimeout).toBeLessThan(10000);
   });
 
   it('affiche le message dans la console sans SMTP_HOST', async () => {

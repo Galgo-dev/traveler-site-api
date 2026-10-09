@@ -5,6 +5,15 @@
 const nodemailer = require('nodemailer');
 const config = require('../config/config');
 
+// Délais courts : par défaut nodemailer attend jusqu'à 2 min (connexion) ou 10 min (inactivité).
+// Un serveur SMTP bloqué ferait alors attendre la requête au-delà du délai du front (10 s) ;
+// avec ces délais, l'envoi échoue vite et l'erreur est journalisée par le service appelant.
+const DELAIS_SMTP_MS = {
+  connectionTimeout: 4000,
+  greetingTimeout: 4000,
+  socketTimeout: 4000,
+};
+
 let transporteur;
 
 function obtenirTransporteur() {
@@ -15,6 +24,7 @@ function obtenirTransporteur() {
       port,
       secure,
       ...(user ? { auth: { user, pass: password } } : {}),
+      ...DELAIS_SMTP_MS,
     });
   }
   return transporteur;
