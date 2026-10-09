@@ -36,7 +36,7 @@ Les routes `POST` ci-dessous sont limitées en nombre de tentatives (réponse 42
 | POST | `http://localhost:3000/api/auth/inscription` | Public | `nom`, `prenom`, `email`, `telephone`, `dateNaissance`, `motDePasse` |
 | POST | `http://localhost:3000/api/auth/connexion` | Public | `email`, `motDePasse` — connexion client |
 | POST | `http://localhost:3000/api/auth/agents/connexion` | Public | `email`, `motDePasse` — connexion du personnel |
-| POST | `http://localhost:3000/api/auth/mot-de-passe-oublie` | Public | `email` |
+| POST | `http://localhost:3000/api/auth/mot-de-passe-oublie` | Public | `email` — envoie un e-mail avec un lien `FRONT_URL/reinitialisation-mot-de-passe?token=…` (en dev : visible sur http://localhost:8025) |
 | POST | `http://localhost:3000/api/auth/reinitialisation` | Public | `token` (64 caractères hexadécimaux), `motDePasse` |
 | PATCH | `http://localhost:3000/api/auth/mot-de-passe` | Connecté | `motDePasseActuel`, `nouveauMotDePasse` |
 
@@ -51,7 +51,9 @@ Mot de passe : au moins 10 caractères, une majuscule, une minuscule et un chiff
 | GET | `http://localhost:3000/api/clients/moi` | Client | Voir son profil |
 | PATCH | `http://localhost:3000/api/clients/moi` | Client | Modifier son profil (`nom`, `prenom`, `email`, `telephone`, `dateNaissance`) |
 | DELETE | `http://localhost:3000/api/clients/moi` | Client | Supprimer son compte (RGPD) — corps : `motDePasse` |
-| GET | `http://localhost:3000/api/clients` | Personnel | Liste des clients — query : `page`, `limite`, `q` |
+| POST | `http://localhost:3000/api/clients/moi/demande-suppression` | Client | Demander la suppression de son compte, traitée par un agent — corps : `motDePasse` (400 si incorrect). Réponse : le profil avec `suppressionDemandeeLe` |
+| DELETE | `http://localhost:3000/api/clients/moi/demande-suppression` | Client | Annuler sa demande de suppression. Réponse : le profil |
+| GET | `http://localhost:3000/api/clients` | Personnel | Liste des clients — query : `page`, `limite`, `q`, `suppressionDemandee` (`true` : demandes de suppression en attente, les plus anciennes d'abord) |
 | GET | `http://localhost:3000/api/clients/:id` | Personnel | Dossier d'un client |
 | GET | `http://localhost:3000/api/clients/:id/favoris` | Personnel | Favoris d'un client, éléments masqués compris |
 | PATCH | `http://localhost:3000/api/clients/:id` | Personnel | Corriger un client (jamais le mot de passe) |

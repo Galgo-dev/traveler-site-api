@@ -10,13 +10,17 @@ const modification = Joi.object({
   dateNaissance,
 }).min(1);
 
+// Suppression immédiate ou demande de suppression : le client reconfirme son mot de passe.
 const suppressionCompte = Joi.object({
   motDePasse: Joi.string().max(200).required(),
 });
+const demandeSuppression = suppressionCompte;
 
 const liste = Joi.object({
   ...pagination,
   q: Joi.string().trim().max(100).allow(''),
+  // true : uniquement les clients ayant demandé la suppression de leur compte.
+  suppressionDemandee: Joi.boolean(),
 });
 
-module.exports = { modification, suppressionCompte, liste };
+module.exports = { modification, suppressionCompte, demandeSuppression, liste };

@@ -5,7 +5,8 @@
  *
  * Étapes :
  *   1. vérifie que Docker est disponible ;
- *   2. `docker compose up -d db` (crée ou relance le conteneur old-traveler-db) ;
+ *   2. `docker compose up -d db` (crée ou relance le conteneur old-traveler-db),
+ *      puis Mailpit (serveur de mails de développement, non bloquant) ;
  *   3. attend que PostgreSQL accepte les connexions ;
  *   4. applique les migrations en attente (sequelize-cli db:migrate).
  *
@@ -46,6 +47,17 @@ function demarrerConteneur() {
   if (res.status !== 0) echec('impossible de démarrer le conteneur (voir le message de Docker ci-dessus).');
 }
 
+// Non bloquant : sans Mailpit, l'API fonctionne mais les e-mails ne partent pas.
+function demarrerMailpit() {
+  log('Démarrage du serveur de mails de développement (docker compose up -d mailpit)…');
+  const res = executer('docker', ['compose', 'up', '-d', 'mailpit']);
+  if (res.status !== 0) {
+    console.warn('[db] AVERTISSEMENT : Mailpit n\'a pas pu démarrer, les e-mails ne seront pas capturés.');
+  } else {
+    log('Mailpit prêt : http://localhost:8025');
+  }
+}
+
 const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function attendreBase() {
@@ -78,6 +90,7 @@ function sequelizeCli(...args) {
 (async () => {
   verifierDocker();
   demarrerConteneur();
+  demarrerMailpit();
   await attendreBase();
   log('Application des migrations…');
   sequelizeCli('db:migrate');

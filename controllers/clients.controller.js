@@ -15,6 +15,14 @@ exports.supprimerMonCompte = asyncHandler(async (req, res) => {
   res.status(204).end();
 });
 
+exports.demanderSuppression = asyncHandler(async (req, res) => {
+  res.json(await clientsService.demanderSuppression(req.utilisateur.id, req.body.motDePasse));
+});
+
+exports.annulerDemandeSuppression = asyncHandler(async (req, res) => {
+  res.json(await clientsService.annulerDemandeSuppression(req.utilisateur.id));
+});
+
 // --- Le personnel ---
 exports.lister = asyncHandler(async (req, res) => {
   res.json(await clientsService.lister(req.query));

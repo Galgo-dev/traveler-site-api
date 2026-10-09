@@ -8,7 +8,7 @@ API REST (Node.js, Express, Sequelize, PostgreSQL sous Docker) du site de l'agen
 2. Copier `.env.example` en `.env` et renseigner les valeurs (`DB_*`, `JWT_SECRET`, `ADMIN_*`).
 3. Lancer Docker Desktop.
 4. Première fois : `npm run db:start:seed` (crée l'administrateur et un catalogue de démo).
-5. `npm start` : démarre le conteneur PostgreSQL, applique les migrations puis lance l'API sur `http://localhost:3000/api`.
+5. `npm start` : démarre les conteneurs PostgreSQL et Mailpit, applique les migrations puis lance l'API sur `http://localhost:3000/api`.
 
 | Commande | Effet |
 |---|---|
@@ -17,6 +17,16 @@ API REST (Node.js, Express, Sequelize, PostgreSQL sous Docker) du site de l'agen
 | `npm run db:stop` | Arrête le conteneur |
 | `npm run db:reset` | Efface la base et la recrée avec les données de démo |
 | `npm run db:psql` | Console SQL dans le conteneur |
+
+## E-mails
+
+Le lien « mot de passe oublié » est envoyé par SMTP (nodemailer), configuré par les variables `SMTP_*` et `MAIL_FROM` du `.env` (voir `.env.example`).
+
+- **Développement** : `npm start` lance aussi **Mailpit** (conteneur `old-traveler-mailpit`), qui capture les mails sans les envoyer. Avec `SMTP_HOST=localhost` et `SMTP_PORT=1025`, les mails sont visibles sur http://localhost:8025.
+- **Production** : renseigner le serveur SMTP réel (`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`).
+- Sans `SMTP_HOST`, les mails sont simplement affichés dans la console du serveur.
+
+Si l'envoi échoue, l'erreur est journalisée côté serveur et la réponse reste la même, pour ne pas révéler si un compte existe.
 
 ## Authentification
 
@@ -36,7 +46,7 @@ Accès : **Public** (sans connexion), **Client**, **Personnel** (agent ou admini
 | POST | `/inscription` | Public | Inscription client (nom, prenom, email, telephone, dateNaissance, motDePasse) |
 | POST | `/connexion` | Public | Connexion client |
 | POST | `/agents/connexion` | Public | Connexion du personnel |
-| POST | `/mot-de-passe-oublie` | Public | Envoie un lien de réinitialisation (affiché dans la console en V1) |
+| POST | `/mot-de-passe-oublie` | Public | Envoie un e-mail avec un lien de réinitialisation (voir « E-mails ») |
 | POST | `/reinitialisation` | Public | `{ token, motDePasse }` |
 | PATCH | `/mot-de-passe` | Client, Personnel | Changer son propre mot de passe `{ motDePasseActuel, nouveauMotDePasse }` |
 

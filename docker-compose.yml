@@ -1,4 +1,4 @@
-# Base PostgreSQL de l'API Old Traveler.
+# Base PostgreSQL et serveur de mails de développement (Mailpit) de l'API Old Traveler.
 # Les valeurs ${DB_*} sont lues automatiquement par Docker Compose dans le fichier .env du projet.
 name: old-traveler-api
 
@@ -22,6 +22,16 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+
+  # Serveur SMTP de développement : capture les e-mails sans les envoyer.
+  # Interface web : http://localhost:8025 — SMTP : localhost:1025.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: old-traveler-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   old-traveler-pgdata:
